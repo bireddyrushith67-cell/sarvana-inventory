@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sarvana Inventory</title>
+    <style>
+        /* ===== CSS RESET & BASE STYLES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* ===== HEADER STYLES ===== */
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 1rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        header.admin-mode {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .admin-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+
+        /* ===== SEARCH BAR ===== */
+        .search-container {
+            position: relative;
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            font-size: 1.1rem;
+            pointer-events: none;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.9rem 1.2rem 0.9rem 2.8rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            background: white;
+        }
+
+        .exit-admin {
+            background: rgba(255,255,255,0.9);
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #e74c3c;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .exit-admin:hover {
+            background: white;
+            transform: scale(1.05);
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        /* ===== ADMIN PANEL ===== */
+        .admin-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .admin-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #2c3e50;
+        }
+
+        .add-item-form {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 0.4rem;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 0.7rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .add-btn {
+            padding: 0.7rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .add-item-form {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== MANAGE ITEMS LIST ===== */
+        .manage-section {
+            margin-top: 2rem;
+        }
+
+        .manage-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .manage-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .manage-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto auto;
+            gap: 1rem;
+            align-items: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+
+        .manage-item:hover {
+            background: #e9ecef;
+        }
+
+        .manage-item-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .manage-item-category {
+            font-size: 0.85rem;
+            color: #666;
+            background: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .status-toggle {
+            padding: 0.4rem 1rem;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .status-toggle.available {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-toggle.outofstock {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .delete-btn {
+            padding: 0.5rem;
+            background: #ffebee;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: #ef5350;
+        }
+
+        @media (max-width: 768px) {
+            .manage-item {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+        }
+
+        /* ===== CATEGORY FILTERS ===== */
+        .categories-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .categories-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .category-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+        }
+
+        .category-btn {
+            padding: 0.5rem 1.2rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            background: white;
+            color: #555;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .category-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .category-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        /* ===== LOADING & ERROR STATES ===== */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e0e0e0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            margin: 2rem 0;
+            border-left: 4px solid #c62828;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: #888;
+            font-size: 1.1rem;
+        }
+
+        /* ===== ITEMS GRID ===== */
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.2rem;
+        }
+
+        /* ===== ITEM CARD ===== */
+        .item-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #f0f0f0;
+        }
+
+        .item-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .item-name {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .item-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .item-category {
+            font-size: 0.8rem;
+            color: #666;
+            background: #f5f5f5;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .status-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-available {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-outofstock {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 2rem 1.5rem;
+            margin-top: 3rem;
+        }
+
+        footer.admin-mode {
+            background: #c0392b;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .footer-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-contact {
+            color: #bdc3c7;
+            font-size: 0.95rem;
+        }
+
+        .footer-contact a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .footer-contact a:hover {
+            text-decoration: underline;
+        }
+
+        /* ===== MOBILE RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            header {
+                padding: 1.5rem 1rem;
+            }
+
+            .items-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .category-btn {
+                padding: 0.4rem 1rem;
+                font-size: 0.85rem;
+            }
+
+            .item-card {
+                padding: 1.2rem;
+            }
+
+            main {
+                padding: 1rem;
+            }
+
+            .admin-panel {
+                padding: 1.5rem;
+            }
+
+            .search-container {
+                flex-direction: column;
+                gap: 0.8rem;
+            }
+
+            .exit-admin {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.3rem;
+            }
+
+            .search-input {
+                font-size: 0.95rem;
+                padding: 0.8rem 1rem 0.8rem 2.5rem;
+            }
+
+            .item-name {
+                font-size: 1rem;
+            }
+        }
+
+        /* ===== RESULTS COUNT ===== */
+        .results-count {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .results-count strong {
+            color: #667eea;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== HEADER WITH SHOP NAME & SEARCH ===== -->
+    <header id="mainHeader">
+        <div class="header-content">
+            <h1>🛒 Sarvana Inventory <span id="adminBadge" class="admin-badge hidden">ADMIN MODE</span></h1>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    id="searchInput" 
+                    placeholder="Search items..."
+                    autocomplete="off"
+                >
+                <button id="exitAdminBtn" class="exit-admin hidden">Exit Admin</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main>
+        <!-- Admin Panel (hidden by default) -->
+        <div id="adminPanel" class="admin-panel hidden">
+            <div class="admin-title">📝 Manage Inventory</div>
+            
+            <!-- Add Item Form -->
+            <div class="add-item-form">
+                <div class="form-group">
+                    <label>Item Name</label>
+                    <input type="text" id="newItemName" placeholder="Enter item name">
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <input type="text" id="newItemCategory" placeholder="e.g. Groceries">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="newItemStatus">
+                        <option value="Available">Available</option>
+                        <option value="Out of Stock">Out of Stock</option>
+                    </select>
+                </div>
+                <button class="add-btn" onclick="addNewItem()">Add Item</button>
+            </div>
+
+            <!-- Manage Existing Items -->
+            <div class="manage-section">
+                <div class="manage-title">📦 All Items</div>
+                <div id="manageList" class="manage-list">
+                    <!-- Items will be listed here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer View (shown by default) -->
+        <div id="customerView">
+            <!-- Category Filter Buttons -->
+            <section class="categories-section" id="categorySection">
+                <div class="categories-label">Filter by Category:</div>
+                <div class="category-buttons" id="categoryButtons">
+                    <button class="category-btn active" data-category="all">All Items</button>
+                </div>
+            </section>
+
+            <!-- Results Count -->
+            <div class="results-count" id="resultsCount"></div>
+
+            <!-- Items Grid -->
+            <div id="itemsContainer">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 1rem;">Loading inventory...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <footer id="mainFooter">
+        <div class="footer-content">
+            <div class="footer-title">Sarvana</div>
+            <div class="footer-contact">
+                📍 123 Market Street, Downtown | 📞 (555) 123-4567
+            </div>
+        </div>
+    </footer>
+
+    <!-- ===== JAVASCRIPT ===== -->
+    <script>
+        // ============================================
+        // INITIAL DATA (embedded - no external files needed)
+        // ============================================
+        const INITIAL_ITEMS = [
+            { "item_name": "Rice", "category": "Groceries", "status": "Available" },
+            { "item_name": "Wheat Flour", "category": "Groceries", "status": "Available" },
+            { "item_name": "Sugar", "category": "Groceries", "status": "Out of Stock" },
+            { "item_name": "Milk", "category": "Dairy", "status": "Out of Stock" },
+            { "item_name": "Cheese", "category": "Dairy", "status": "Available" },
+            { "item_name": "Yogurt", "category": "Dairy", "status": "Available" },
+            { "item_name": "Apples", "category": "Fruits", "status": "Available" },
+            { "item_name": "Bananas", "category": "Fruits", "status": "Available" },
+            { "item_name": "Oranges", "category": "Fruits", "status": "Out of Stock" },
+            { "item_name": "Potato Chips", "category": "Snacks", "status": "Available" },
+            { "item_name": "Cookies", "category": "Snacks", "status": "Available" },
+            { "item_name": "Chocolate", "category": "Snacks", "status": "Out of Stock" },
+            { "item_name": "Coca Cola", "category": "Drinks", "status": "Available" },
+            { "item_name": "Orange Juice", "category": "Drinks", "status": "Available" },
+            { "item_name": "Water Bottle", "category": "Drinks", "status": "Available" }
+        ];
+
+        // ============================================
+        // STATE MANAGEMENT
+        // ============================================
+        let allItems = [];
+        let filteredItems = [];
+        let currentCategory = 'all';
+        let searchQuery = '';
+        let categories = ['all'];
+        let isAdminMode = false;
+
+        // ============================================
+        // DOM ELEMENTS
+        // ============================================
+        const itemsContainer = document.getElementById('itemsContainer');
+        const categoryButtons = document.getElementById('categoryButtons');
+        const searchInput = document.getElementById('searchInput');
+        const resultsCount = document.getElementById('resultsCount');
+        const adminPanel = document.getElementById('adminPanel');
+        const customerView = document.getElementById('customerView');
+        const adminBadge = document.getElementById('adminBadge');
+        const exitAdminBtn = document.getElementById('exitAdminBtn');
+        const mainHeader = document.getElementById('mainHeader');
+        const mainFooter = document.getElementById('mainFooter');
+        const manageList = document.getElementById('manageList');
+
+        // ============================================
+        // LOAD DATA (from localStorage or initial data)
+        // ============================================
+        function loadData() {
+            const saved = localStorage.getItem('sarvanainventory');
+            if (saved) {
+                allItems = JSON.parse(saved);
+            } else {
+                allItems = [...INITIAL_ITEMS];
+                saveData();
+            }
+            categories = ['all', ...new Set(allItems.map(item => item.category).filter(Boolean))];
+        }
+
+        function saveData() {
+            localStorage.setItem('sarvanainventory', JSON.stringify(allItems));
+        }
+
+        // ============================================
+        // ADMIN MODE
+        // ============================================
+        function enterAdminMode() {
+            isAdminMode = true;
+            adminPanel.classList.remove('hidden');
+            customerView.classList.add('hidden');
+            adminBadge.classList.remove('hidden');
+            exitAdminBtn.classList.remove('hidden');
+            mainHeader.classList.add('admin-mode');
+            mainFooter.classList.add('admin-mode');
+            searchInput.value = '';
+            searchQuery = '';
+            renderManageList();
+        }
+
+        function exitAdminMode() {
+            isAdminMode = false;
+            adminPanel.classList.add('hidden');
+            customerView.classList.remove('hidden');
+            adminBadge.classList.add('hidden');
+            exitAdminBtn.classList.add('hidden');
+            mainHeader.classList.remove('admin-mode');
+            mainFooter.classList.remove('admin-mode');
+            searchInput.value = '';
+            searchQuery = '';
+            createCategoryButtons();
+            applyFilters();
+        }
+
+        exitAdminBtn.addEventListener('click', exitAdminMode);
+
+        // ============================================
+        // ADD NEW ITEM
+        // ============================================
+        function addNewItem() {
+            const name = document.getElementById('newItemName').value.trim();
+            const category = document.getElementById('newItemCategory').value.trim();
+            const status = document.getElementById('newItemStatus').value;
+
+            if (!name || !category) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            allItems.push({
+                item_name: name,
+                category: category,
+                status: status
+            });
+
+            saveData();
+            
+            // Clear form
+            document.getElementById('newItemName').value = '';
+            document.getElementById('newItemCategory').value = '';
+            document.getElementById('newItemStatus').value = 'Available';
+
+            // Update categories and refresh
+            categories = ['all', ...new Set(allItems.map(item => item.category).filter(Boolean))];
+            renderManageList();
+            
+            // Show success
+            alert('Item added successfully!');
+        }
+
+        // ============================================
+        // TOGGLE STATUS
+        // ============================================
+        function toggleStatus(index) {
+            const item = allItems[index];
+            item.status = item.status === 'Available' ? 'Out of Stock' : 'Available';
+            saveData();
+            renderManageList();
+        }
+
+        // ============================================
+        // DELETE ITEM
+        // ============================================
+        function deleteItem(index) {
+            if (confirm('Are you sure you want to delete this item?')) {
+                allItems.splice(index, 1);
+                saveData();
+                categories = ['all', ...new Set(allItems.map(item => item.category).filter(Boolean))];
+                renderManageList();
+            }
+        }
+
+        // ============================================
+        // RENDER MANAGE LIST (Admin View)
+        // ============================================
+        function renderManageList() {
+            if (allItems.length === 0) {
+                manageList.innerHTML = '<p style="text-align:center;color:#888;padding:2rem;">No items in inventory</p>';
+                return;
+            }
+
+            manageList.innerHTML = allItems.map((item, index) => {
+                const isAvailable = item.status === 'Available';
+                return `
+                    <div class="manage-item">
+                        <div class="manage-item-name">${escapeHtml(item.item_name)}</div>
+                        <div><span class="manage-item-category">${escapeHtml(item.category)}</span></div>
+                        <button class="status-toggle ${isAvailable ? 'available' : 'outofstock'}" onclick="toggleStatus(${index})">
+                            ${isAvailable ? '✓ Available' : '✗ Out of Stock'}
+                        </button>
+                        <button class="delete-btn" onclick="deleteItem(${index})" title="Delete">🗑️</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ============================================
+        // CREATE CATEGORY BUTTONS
+        // ============================================
+        function createCategoryButtons() {
+            categoryButtons.innerHTML = '<button class="category-btn active" data-category="all">All Items</button>';
+            
+            categories.slice(1).forEach(category => {
+                const btn = document.createElement('button');
+                btn.className = 'category-btn';
+                btn.dataset.category = category;
+                btn.textContent = category;
+                btn.addEventListener('click', () => selectCategory(category));
+                categoryButtons.appendChild(btn);
+            });
+            
+            categoryButtons.querySelector('[data-category="all"]').addEventListener('click', () => selectCategory('all'));
+        }
+
+        // ============================================
+        // SELECT CATEGORY
+        // ============================================
+        function selectCategory(category) {
+            currentCategory = category;
+            
+            categoryButtons.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.category === category);
+            });
+            
+            applyFilters();
+        }
+
+        // ============================================
+        // SEARCH HANDLER
+        // ============================================
+        searchInput.addEventListener('input', (e) => {
+            const value = e.target.value.toLowerCase().trim();
+            
+            // Check for admin mode trigger
+            if (value === 'add items') {
+                enterAdminMode();
+                return;
+            }
+            
+            if (isAdminMode) return; // Don't search in admin mode
+            
+            searchQuery = value;
+            applyFilters();
+        });
+
+        // ============================================
+        // APPLY FILTERS (Search + Category)
+        // ============================================
+        function applyFilters() {
+            filteredItems = allItems.filter(item => {
+                const categoryMatch = currentCategory === 'all' || 
+                    (item.category && item.category.toLowerCase() === currentCategory.toLowerCase());
+                
+                const searchMatch = !searchQuery || 
+                    (item.item_name && item.item_name.toLowerCase().includes(searchQuery)) ||
+                    (item.category && item.category.toLowerCase().includes(searchQuery));
+                
+                return categoryMatch && searchMatch;
+            });
+            
+            renderItems();
+        }
+
+        // ============================================
+        // RENDER ITEMS (Customer View)
+        // ============================================
+        function renderItems() {
+            const totalItems = allItems.length;
+            const showingItems = filteredItems.length;
+            resultsCount.innerHTML = `Showing <strong>${showingItems}</strong> of <strong>${totalItems}</strong> items`;
+            
+            if (filteredItems.length === 0) {
+                itemsContainer.innerHTML = `
+                    <div class="no-results">
+                        🔍 No items found matching your search.
+                    </div>
+                `;
+                return;
+            }
+            
+            const grid = document.createElement('div');
+            grid.className = 'items-grid';
+            
+            filteredItems.forEach(item => {
+                const card = createItemCard(item);
+                grid.appendChild(card);
+            });
+            
+            itemsContainer.innerHTML = '';
+            itemsContainer.appendChild(grid);
+        }
+
+        // ============================================
+        // CREATE ITEM CARD
+        // ============================================
+        function createItemCard(item) {
+            const card = document.createElement('div');
+            card.className = 'item-card';
+            
+            const status = (item.status || '').toLowerCase().trim();
+            const isAvailable = status === 'available' || status === 'in stock' || status === 'instock';
+            
+            const statusClass = isAvailable ? 'status-available' : 'status-outofstock';
+            const statusText = isAvailable ? 'Available' : 'Out of Stock';
+            
+            card.innerHTML = `
+                <div class="item-name">${escapeHtml(item.item_name)}</div>
+                <div class="item-meta">
+                    <span class="item-category">${escapeHtml(item.category)}</span>
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // ============================================
+        // UTILITY: ESCAPE HTML
+        // ============================================
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ============================================
+        // INITIALIZE
+        // ============================================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            createCategoryButtons();
+            applyFilters();
+        });
+    </script>
+</body>
+</html>
